@@ -34,7 +34,7 @@ const DEG = Math.PI / 180;
 const UP = new THREE.Vector3(0, 1, 0), DOWN = new THREE.Vector3(0, -1, 0);
 const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vector3(), _n = new THREE.Vector3(), _d = new THREE.Vector3(), _r = new THREE.Vector3(), _u = new THREE.Vector3();
 const _m = new THREE.Vector3(), _x = new THREE.Vector3(), _hb = new THREE.Vector3();
-const _hit = new Hit(), _res = { t: 0, dist: 0 };
+const _hit = new Hit(), _hit2 = new Hit(), _res = { t: 0, dist: 0 };
 const W = () => WEAPONS.brolly;
 const _trailPos = new THREE.Vector3();
 
