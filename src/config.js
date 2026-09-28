@@ -172,7 +172,7 @@ export const WEAPONS = {
     id: 'brush', name: 'Swish Brush', kind: 'brush', class: 'Brush', anim: 'roller',
     blurb: 'Dash along the ground leaving a thin trail, or swipe side to side to flick a spray of small globs.',
     stats: { range: 0.2, damage: 0.35, rate: 1.0, mobility: 1.0, paint: 0.5 },
-    brushSpeed: 7.4, brushWidth: 0.95, brushInkPerMeter: 0.32, brushDamage: 30, brushHitCd: 0.35,
+    brushSpeed: 7.4, brushWidth: 1.2, brushInkPerMeter: 0.32, brushDamage: 30, brushHitCd: 0.35,
     swipeInterval: 0.16, swipeInk: 2.2, swipeDrops: 5, swipeSpeed: 12.5, swipeSpreadDeg: 40,
     swipeDamageNear: 26, swipeDamageFar: 12, impactRadius: 0.826,
     moveSpeedFiring: 5.8,
@@ -188,6 +188,7 @@ export const WEAPONS = {
     // pelletDamageFar at falloffEnd — a near-full blast (10–11 pellets) is 80–88, so two shots splat up close
     fireInterval: 0.45, inkPerShot: 5.5, pellets: 11, pelletDamage: 8, pelletDamageFar: 2.5, falloffStart: 2.8, falloffEnd: 6.5,
     projSpeed: 25, straightTime: 0.1, pelletGrav: 30, pelletDrag: 2, pelletLife: 0.6, pelletSize: 0.1, pelletPaint: 0.59,
+    pelletTrailEvery: 0.5, pelletTrailRadius: 0.22, firePaintDistance: 1.8, firePaintRadius: 0.9,
     spreadDeg: 8, spreadAir: 10,
     moveSpeedFiring: 4.6, moveSpeedShield: 3.1,
     // canopy (kits/brolly.js): hold after the shot to open it; kept open launchHold s it launches as a sliding wall.

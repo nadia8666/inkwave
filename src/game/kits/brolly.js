@@ -36,6 +36,7 @@ const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _v3 = new THREE.Vecto
 const _m = new THREE.Vector3(), _x = new THREE.Vector3(), _hb = new THREE.Vector3();
 const _hit = new Hit(), _res = { t: 0, dist: 0 };
 const W = () => WEAPONS.brolly;
+const _trailPos = new THREE.Vector3();
 
 // held canopy (logical shield): a disc facing the aim, centred ahead of the chest (matches the model in the aim pose)
 const HELD = { up: 0.9, fwd: 0.62, r: 0.8, pitchMin: -0.5, pitchMax: 0.45 };
@@ -84,6 +85,7 @@ function fireBlast(r, w) {
   const m = PJ._muzzle(a, _m.set(0, 0, 0));
   const dir = PJ._aimFrom(a, m, _d);
   PJ._ballistic(m, dir, a.aimPoint, w.projSpeed, w.straightTime, w.pelletGrav, w.pelletDrag, w.range);
+  paintFireSpot(a, dir, w);
   _r.crossVectors(dir, UP); if (_r.lengthSq() < 1e-6) _r.set(1, 0, 0); _r.normalize();
   _u.crossVectors(_r, dir).normalize();
   const cone = Math.tan((a.grounded ? w.spreadDeg : w.spreadAir) * DEG), turn = Math.random() * Math.PI * 2;
@@ -102,7 +104,7 @@ function fireBlast(r, w) {
     });
     p.life = w.pelletLife;
     p._bid = ++SEQ;
-    PELLETS.push({ p, id: p._bid, owner: a, blast: BLAST });
+    PELLETS.push({ p, id: p._bid, owner: a, blast: BLAST, trail: 0 });
   }
   const near = a.isLocal || a._nearCamera();
   if (near) {
@@ -116,6 +118,31 @@ function fireBlast(r, w) {
   r.cooldown = w.fireInterval;
   STATS.blasts++;
   return true;
+}
+
+function creditPaint(owner, area) {
+  if (owner.specialActive) owner.addTurfNoSpecial(area); else owner.addTurf(area);
+}
+function paintFireSpot(a, dir, w) {
+  _v2.set(dir.x, 0, dir.z);
+  if (_v2.lengthSq() < 1e-4) _v2.set(Math.sin(a.aimYaw), 0, Math.cos(a.aimYaw));
+  else _v2.normalize();
+  _v.set(a.pos.x, a.pos.y + 4, a.pos.z).addScaledVector(_v2, w.firePaintDistance);
+  const g = G.physics.raycast(_v, DOWN, 16, _hit, true);
+  if (g.hit) creditPaint(a, G.paint.splat(_v3.copy(g.point).addScaledVector(g.normal, 0.08), w.firePaintRadius, a.team, { seed: Math.random() }));
+}
+function paintPelletTrail(e, p, to) {
+  const w = W(), length = p.pos.distanceTo(to), spacing = w.pelletTrailEvery;
+  if (length < 1e-5 || !(spacing > 0)) return;
+  let markAt = spacing - e.trail;
+  while (markAt <= length) {
+    _trailPos.copy(p.pos).lerp(to, markAt / length);
+    _trailPos.y += 0.08;
+    const g = G.physics.raycast(_trailPos, DOWN, 40, _hit2, true);
+    if (g.hit) creditPaint(e.owner, G.paint.splat(_v3.copy(g.point).addScaledVector(g.normal, 0.08), w.pelletTrailRadius, p.team, { seed: Math.random() }));
+    markAt += spacing;
+  }
+  e.trail = (e.trail + length) % spacing;
 }
 
 // ---------------------------------------------------------------------------------------------- per-frame trigger
@@ -473,6 +500,7 @@ function tick(dt) {
         break;
       }
     }
+    paintPelletTrail(e, p, _v);
   }
   for (const [key, rec] of PEND) {
     if (G.time < rec.at - 1e-6) continue;

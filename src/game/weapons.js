@@ -117,6 +117,7 @@ export class WeaponRunner {
     this.spread = this._spreadDeg(w);
     this.sinceHand[0] += dt; this.sinceHand[1] += dt;
     const inkBeforeMain = a.ink;
+    const bladeWasCharging = w.kind === 'blade' && !!this.kit?.charging;
     switch (w.kind) {
       case 'shooter': case 'blaster': this._auto(dt, inp, w); break;
       case 'charger': this._charger(dt, inp, w); break;
@@ -130,7 +131,7 @@ export class WeaponRunner {
       case 'splatling': this._splatling(dt, inp, w); break;
       default: MAIN_KITS[w.kind]?.update(this, dt, inp, w);   // kit weapons (kits/*.js)
     }
-    if (a.ink < inkBeforeMain || (inp.fire && a.lastFire === 0)) this._paintUnder();
+    if (this._underPaintAllowed(bladeWasCharging) && (a.ink < inkBeforeMain || (inp.fire && a.lastFire === 0))) this._paintUnder();
     // ---- sub weapon (the actor's own: the Splat Bomb here, everything else via G.subs). Bomb Barrage: its bomb,
     // no ink, as fast as its throw gap allows
     const bar = a.specialActive && a.specialActive.kind === 'barrage' ? a.specialActive : null;
@@ -157,8 +158,15 @@ export class WeaponRunner {
         rumble(a, 0.08, 0.22, 70);
       }
     }
-    if (inp.subReleased && a.ink < inkBeforeSub) this._paintUnder();
+    if (this._underPaintAllowed(bladeWasCharging) && inp.subReleased && a.ink < inkBeforeSub) this._paintUnder();
     if (!inp.sub && !inp.subReleased) this.aimingSub = false;
+  }
+
+  _underPaintAllowed(bladeWasCharging = false) {
+    const kind = this.a.weapon.kind;
+    if (kind === 'blade' && (bladeWasCharging || this.kit?.charging)) return false;
+    if ((kind === 'brush' || kind === 'roller') && this.rolling) return false;
+    return true;
   }
 
   _paintUnder() {
