@@ -32,7 +32,7 @@ Keep pull requests focused. If you change gameplay tuning, say what you measured
 | `src/fx` | particles, screen effects, event → effect wiring |
 | `src/ui` | menus, HUD, map diorama, icons |
 | `src/audio` | procedural sound effects and music |
-| `docs` | event contract, module contracts, character rig reference |
+| `docs` | [project guide](docs/PROJECT_GUIDE.md), [gameplay tuning guide](docs/GAMEPLAY_TUNING.md), event and module contracts, character rig, network, and boss references |
 | `tools` | dev server, labs, headless capture and measurement scripts, release |
 
 ## Code style

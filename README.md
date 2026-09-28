@@ -119,6 +119,11 @@ screen drew (see [`docs/NET.md`](docs/NET.md#how-the-netcode-works-srcnetnetmatc
 
 Rendering is three.js r186 (vendored, plain ES modules with an import map) with GTAO, bloom and a custom grade pass.
 
+For a plain-language tour of the repository and runtime, see [`docs/PROJECT_GUIDE.md`](docs/PROJECT_GUIDE.md). For
+practical walkthroughs of paint size, weapon ink costs, respawn launch flow, squid-only scale, movement pace, and camera
+framing, see [`docs/GAMEPLAY_TUNING.md`](docs/GAMEPLAY_TUNING.md). The other focused design and implementation
+contracts are indexed from the project guide.
+
 ## Browser support
 
 Chrome and Edge are the target; Firefox works. Safari runs but is slower. A discrete or recent integrated GPU is recommended for the High preset; the settings menu has Medium and Low tiers.

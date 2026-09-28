@@ -51,8 +51,8 @@ export class CameraRig {
     this.yaw = 0; this.pitch = -0.1;
     this.pivot = new THREE.Vector3();
     this.pivotY = 0;
-    this.dist = 4.5;
-    this.curDist = 4.5;
+    this.dist = 2;
+    this.curDist = 2;
     this.fovKick = 0;
     this.trauma = 0;
     this.shakeScale = 1;
@@ -115,7 +115,7 @@ export class CameraRig {
     this.target = actor;
     if (snap) {
       const p = actor.visualPos ? actor.visualPos(_v) : _v.copy(actor.pos);
-      const h = actor.form === 'squid' ? 1.3 : 1.85;
+      const h = actor.form === 'squid' ? 1 : 1.5;
       this.sx.reset(p.x); this.sy.reset(p.y + h); this.sz.reset(p.z);
       this.pivot.set(p.x, p.y + h, p.z); this.pivotY = p.y + h;
       this.hgt.reset(h);

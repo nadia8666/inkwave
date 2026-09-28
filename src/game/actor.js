@@ -13,7 +13,7 @@
 //  · jump buffer + coyote time, apex hang, hard-landing recovery, fire buffer across form changes
 import * as THREE from 'three';
 import { G, emit, clamp, damp, angleDiff, smoothstep } from '../core/ctx.js';
-import { PLAYER, WEAPONS, SPECIALS, SUBS } from '../config.js';
+import { PLAYER, WEAPONS, SPECIALS, SUBS, GLOBAL_DAMAGE_SCALE } from '../config.js';
 import { makeContacts, Hit, GroundHit, WALKABLE } from './physics.js';
 import { WeaponRunner } from './weapons.js';
 import { MAIN_KITS } from './kits/registry.js';
@@ -182,6 +182,7 @@ export class Actor {
     if (this.specialActive && this.specialActive.armor) amount *= 0.25;
     if (G.specials) { amount = G.specials.filterDamage(this, amount, attacker, source); if (!(amount > 0)) return false; }
     { const K = MAIN_KITS[this.weapon?.kind]; if (K?.damageTaken) { amount = K.damageTaken(this.weaponRunner, amount, attacker, source); if (!(amount > 0)) return false; } }   // kit armour (e.g. the mitts' leap)
+    amount *= GLOBAL_DAMAGE_SCALE;
     this.hp -= amount;
     this.lastDamage = 0;
     this.hurtFlash = Math.min(1, this.hurtFlash + amount / 60);

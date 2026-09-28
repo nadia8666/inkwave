@@ -7,6 +7,7 @@
 // keyed to; guests read it off the snapshots at their playback time.
 import * as THREE from 'three';
 import { G, emit, on, clamp } from '../core/ctx.js';
+import { GLOBAL_DAMAGE_SCALE } from '../config.js';
 import { BossModel } from './bossModel.js';
 import { BossNav, FLOOR_BODY } from './bossNav.js';
 import { BossHazards, movePhaseAt, moveTimes, beamAngle, HZ } from './bossHazards.js';
@@ -289,7 +290,7 @@ export class Boss {
     if (!attacker || attacker.remote || dmg <= 0 || this.dead) return;
     if (target && target.hp !== undefined && target.id !== undefined) { this._hitCrab(attacker, target, dmg); return; }
     const weak = !!(target && target.weak);
-    const d = dmg * (weak ? BOSS.weak : 1) * (this.stunned ? BOSS.stunned : 1) * (BOSS.weapon[wid] ?? 1);
+    const d = dmg * GLOBAL_DAMAGE_SCALE * (weak ? BOSS.weak : 1) * (this.stunned ? BOSS.stunned : 1) * (BOSS.weapon[wid] ?? 1);
     if (point) G.fx?.burst(point, _v2.copy(point).sub(this.pos).setY(0.4).normalize(), attacker.color, { count: weak ? 10 : 5, speed: weak ? 5 : 3, size: 0.08 });
     if (this.invuln || !this.visible) { if (attacker.isLocal) emit('boss:hit', { damage: 0, weak, attacker, local: true, blocked: true, pos: point || null }); return; }
     if (G.netm && !G.netm.isHost) {
@@ -370,6 +371,7 @@ export class Boss {
   // ---------------------------------------------------------------------------------------------- crablets
   _hitCrab(attacker, c, dmg, fromNet = false) {
     if (c.dead) return;
+    if (!fromNet) dmg *= GLOBAL_DAMAGE_SCALE;
     if (G.netm && !G.netm.isHost && !fromNet) {
       G.netm.sendBossHit(attacker, dmg, false, 'crab', c.id);
       emit('boss:hit', { damage: dmg, weak: false, attacker, local: !!attacker.isLocal, crab: true, predicted: true, pos: new THREE.Vector3(c.x, c.y + 0.4, c.z) });
