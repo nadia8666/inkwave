@@ -36,6 +36,7 @@ export class WeaponRunner {
   }
   reset() {
     this.cooldown = 0; this.charge = 0; this.charging = false; this.rolling = false;
+    this.underPaintT = 0;
     this.flick = -1; this.firingT = 0; this.emptyCd = 0; this.aimingSub = false;
     this.bloom = 0; this.spread = 0; this.rollT = 0; this.chargeT = 0; this.flickRecover = 0; this.rumbleT = 0;
     this.rollDist = 0; this.rollHits = new Map(); this.chargeLoop?.stop(0.05); this.chargeLoop = null; this.chargeDinged = false;
@@ -108,12 +109,14 @@ export class WeaponRunner {
   update(dt, inp) {
     const a = this.a, w = a.weapon;
     this.cooldown -= dt; this.emptyCd -= dt; this.rumbleT -= dt;
+    this.underPaintT = Math.max(0, this.underPaintT - dt);
     this.firingT = Math.max(0, this.firingT - dt);
     this.flickRecover = Math.max(0, this.flickRecover - dt);
     // spread bloom recovers when the trigger is released (and slowly while still firing between shots)
     if (!inp.fire) this.bloom = Math.max(0, this.bloom - dt / (w.bloomRecover ?? 0.28));
     this.spread = this._spreadDeg(w);
     this.sinceHand[0] += dt; this.sinceHand[1] += dt;
+    const inkBeforeMain = a.ink;
     switch (w.kind) {
       case 'shooter': case 'blaster': this._auto(dt, inp, w); break;
       case 'charger': this._charger(dt, inp, w); break;
@@ -127,11 +130,13 @@ export class WeaponRunner {
       case 'splatling': this._splatling(dt, inp, w); break;
       default: MAIN_KITS[w.kind]?.update(this, dt, inp, w);   // kit weapons (kits/*.js)
     }
+    if (a.ink < inkBeforeMain || (inp.fire && a.lastFire === 0)) this._paintUnder();
     // ---- sub weapon (the actor's own: the Splat Bomb here, everything else via G.subs). Bomb Barrage: its bomb,
     // no ink, as fast as its throw gap allows
     const bar = a.specialActive && a.specialActive.kind === 'barrage' ? a.specialActive : null;
     const sub = bar ? bar.bomb : (a.sub || SUB.bomb);
     const SK = SUB_KITS[sub.kind];
+    const inkBeforeSub = a.ink;
     if (this.aimingSub && SK?.hold) SK.hold(this, dt, inp, sub);   // charge-up subs
     if (inp.sub && !this.aimingSub) {
       this.aimingSub = true;
@@ -152,7 +157,16 @@ export class WeaponRunner {
         rumble(a, 0.08, 0.22, 70);
       }
     }
+    if (inp.subReleased && a.ink < inkBeforeSub) this._paintUnder();
     if (!inp.sub && !inp.subReleased) this.aimingSub = false;
+  }
+
+  _paintUnder() {
+    const a = this.a;
+    if (this.underPaintT > 0 || !a.grounded || !a.ground.hit || a.ground.face < 0) return;
+    this.underPaintT = 0.2;
+    _v.set(a.pos.x, a.ground.y + 0.08, a.pos.z);
+    a.addTurf(G.paint.splat(_v, 0.32, a.team, { seed: Math.random() }));
   }
 
   _empty() {
@@ -409,15 +423,12 @@ export class WeaponRunner {
       if (!this.charging) {
         if (a.ink < w.inkPerShot * 5) { this._empty(); return; }
         this.charging = true; this.charge = 0; this.chargeT = 0; this.chargeDinged = false;
-        if (a.isLocal || a._nearCamera()) this.spinLoop = G.audio?.loop('splatling_spin', { pos, volume: a.isLocal ? 0.6 : 0.4, pitch: 0.6 });
       }
       this.chargeT += dt;
       this.charge = Math.min(1, this.chargeT / w.chargeTime);
       a.fireFacing = 0.45;
-      this.spinLoop?.set({ pitch: 0.6 + 0.85 * this.charge, pos });
       if (this.charge >= 1 && !this.chargeDinged) {
         this.chargeDinged = true;
-        if (a.isLocal) G.audio?.play('splatling_ready', { volume: 0.7 });
         rumble(a, 0.05, 0.28, 60);
       }
     } else if (this.charging) {
@@ -464,15 +475,12 @@ Object.assign(WeaponRunner.prototype, {
       if (!this.charging) {
         if (a.ink < w.inkFull * 0.15) { this._empty(); return; }
         this.charging = true; this.charge = 0; this.chargeT = 0; this.chargeDinged = false;
-        if (a.isLocal || a._nearCamera()) this.chargeLoop = G.audio?.loop('splatling_spin', { pos: a.isLocal ? undefined : a.pos, volume: a.isLocal ? 0.6 : 0.4, pitch: 0.6 });
       }
       this.chargeT = Math.min(1, this.chargeT + dt / w.chargeTime);
       this.charge = Math.min(clamp(a.ink / w.inkFull, 0, 1), this.chargeT);
       a.fireFacing = 0.4;
-      this.chargeLoop?.set({ pitch: 0.6 + 0.85 * this.charge, pos: a.isLocal ? undefined : a.pos });
       if (this.charge >= 1 && !this.chargeDinged) {
         this.chargeDinged = true;
-        if (a.isLocal) G.audio?.play('splatling_ready', { volume: 0.7 });
         rumble(a, 0.05, 0.28, 60);
       }
     } else if (this.charging) {

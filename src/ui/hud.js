@@ -288,7 +288,7 @@ export class HUD {
     this.mapDim = h('div', { class: 'iw-map-dim' });
     this._mapT = 0; this._mapV = 0;
 
-    this.markers = Array.from({ length: 8 }, () => h('div', { class: 'iw-mk' }, h('span', { class: 'iw-mk__tag' }, h('i', { class: 'iw-mk__w' }), h('b')), h('i', { class: 'iw-mk__arrow' })));
+    this.markers = Array.from({ length: 8 }, () => h('div', { class: 'iw-mk' }, h('span', { class: 'iw-mk__tag' }, h('i', { class: 'iw-mk__w' }), h('b'), h('span', { class: 'iw-mk__hp' }, h('i'))), h('i', { class: 'iw-mk__arrow' })));
     this.markerLayer = h('div', { class: 'iw-mks' }, this.markers);
     // "Yeah!" cheers: speech bubbles over whoever signalled
     this.cheerEls = Array.from({ length: 8 }, () => h('div', { class: 'iw-cheer' }, 'YEAH!'));
@@ -1911,8 +1911,9 @@ export class HUD {
       const on = !!m.onScreen;
       const ac = byName.get(m.name);
       const ready = !!(ac && ac.specialReady && ac.specialReady());
+      const hp = Math.round(clamp(m.hp == null ? 1 : m.hp, 0, 1) * 100);
       const far = m.dist != null ? clamp((m.dist - 14) / 20, 0, 1) : 0;
-      const key = `${(+m.x).toFixed(0)}|${(+m.y).toFixed(0)}|${on ? 1 : 0}|${on ? 0 : (+m.angle || 0).toFixed(2)}|${m.name}|${m.color}|${ready ? 1 : 0}|${far.toFixed(1)}|${m.tracked ? 1 : 0}`;
+      const key = `${(+m.x).toFixed(0)}|${(+m.y).toFixed(0)}|${on ? 1 : 0}|${on ? 0 : (+m.angle || 0).toFixed(2)}|${m.name}|${m.color}|${ready ? 1 : 0}|${far.toFixed(1)}|${m.tracked ? 1 : 0}|${hp}`;
       if (L[k] === key) continue;
       const prev = L[k];
       L[k] = key;
@@ -1928,6 +1929,8 @@ export class HUD {
       if (el._on !== on) { el._on = on; el.classList.toggle('is-off', !on); }
       if (el._ready !== ready) { el._ready = ready; el.classList.toggle('is-ready', ready); }
       if (el._tracked !== !!m.tracked) { el._tracked = !!m.tracked; el.classList.toggle('is-tracked', !!m.tracked); if (m.tracked) el.querySelector('.iw-mk__tag b').textContent = `${m.name} · TRACKED`; }
+      el.style.setProperty('--hp', `${hp}%`);
+      el.classList.toggle('is-hp-low', hp <= 30);
       el.style.setProperty('--far', far.toFixed(2));
       el.style.transform = `translate3d(${(+m.x).toFixed(1)}px,${(+m.y).toFixed(1)}px,0)`;
       if (!on) el.lastChild.style.transform = `rotate(${(+m.angle || 0).toFixed(3)}rad)`;

@@ -467,7 +467,7 @@ class Game {
       if (!this.match || this.match.attract) return;
       if (attacker?.isLocal) {
         this.hud?.hitMarker(killed ? 'kill' : 'hit');
-        if (G.time - lastHitSnd > 0.06) { lastHitSnd = G.time; G.audio?.play('hit_marker', { volume: 0.6 }); }
+        if (G.time - lastHitSnd > 0.06) { lastHitSnd = G.time; G.audio?.play('hit_marker', { volume: 0.95 }); }
       }
     });
     on('damage', ({ victim, amount, attacker, source }) => {
@@ -483,7 +483,7 @@ class Game {
         else ang = Math.atan2(dy * innerHeight, dx * innerWidth);
       }
       this.hud?.damage(clamp(amount / 80, 0.15, 1), G.teamHex[victim.enemyTeam], ang);
-      if (G.time - lastHurtSnd > 0.25) { lastHurtSnd = G.time; G.audio?.play('hurt', { volume: 0.7 }); }
+      if (G.time - lastHurtSnd > 0.25) { lastHurtSnd = G.time; G.audio?.play('hurt', { volume: 0.95 }); }
       if (amount >= 40) this.rig.addShake(clamp((amount - 30) / 220, 0, 0.4));   // only heavy hits move the camera; chip damage reads through the HUD
     });
     // a squid dropping back into its own ink (dolphin-jump re-entry, hopping in from dry ground) gets a wet plunge;
@@ -1305,16 +1305,20 @@ class Game {
     // ally markers
     const markers = [];
     const v = this._mv || (this._mv = new THREE.Vector3());
+    const visiblePos = this._mvVisible || (this._mvVisible = new THREE.Vector3());
     const W = innerWidth, H = innerHeight;
     for (const o of m.actors) {
       const tracked = o.team !== a.team && o.alive && o.status.track > 0 && o.status.trackTeam === a.team;
-      if (!tracked && (o.isLocal || o.team !== a.team || !o.alive)) continue;
+      const visibleEnemy = !o.isLocal && o.team !== a.team && o.alive && !tracked;
+      if (!o.alive || o.isLocal) continue;
       if (o.character.getHeadPosition && o.form !== 'squid') { o.character.getHeadPosition(v); v.y += 0.45; }
       else { if (o.visualPos) o.visualPos(v); else v.copy(o.pos); v.y += o.form === 'squid' ? 1.0 : 1.9; }
+      visiblePos.copy(v);
       v.project(cam);
       const behind = v.z > 1;
       let x = (v.x * 0.5 + 0.5) * W, y = (-v.y * 0.5 + 0.5) * H;
       const onScreen = !behind && x > 20 && x < W - 20 && y > 20 && y < H - 20;
+      if (visibleEnemy && (o.anim.form === 'swim' || !onScreen || !G.physics.los(cam.position, visiblePos))) continue;
       let angle = 0;
       if (!onScreen) {
         let dx = x - W / 2, dy = y - H / 2;
@@ -1323,7 +1327,7 @@ class Game {
         const k = Math.min((W / 2 - 40) / Math.max(1e-3, Math.abs(Math.cos(angle))), (H / 2 - 40) / Math.max(1e-3, Math.abs(Math.sin(angle))));
         x = W / 2 + Math.cos(angle) * k; y = H / 2 + Math.sin(angle) * k;
       }
-      markers.push({ x, y, name: o.name, color: G.teamHex[o.team], onScreen, angle, dist: o.pos.distanceTo(a.pos), tracked });
+      markers.push({ x, y, name: o.name, color: G.teamHex[o.team], onScreen, angle, dist: o.pos.distanceTo(a.pos), tracked, hp: o.hp / PLAYER.hp });
     }
     // contextual prompts (light tutorial)
     this._hintT += dt;

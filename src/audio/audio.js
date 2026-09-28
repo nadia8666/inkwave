@@ -867,7 +867,7 @@ def('ink_hit_body', {
   },
 });
 def('hurt', {
-  gain: 0.5, max: 3, jitter: 0.06, reverb: 0.03, minGap: 0.06,
+  gain: 0.78, max: 3, jitter: 0.06, reverb: 0.03, minGap: 0.06,
   build(v, p) {
     const lp = v.filter('lowpass', 1400, 0.8, v.out);
     v.tone({ f: 130 * p, f1: 50 * p, sw: 0.12, a: 0.002, d: 0.18, peak: 0.9, to: lp });
