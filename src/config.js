@@ -215,7 +215,8 @@ export const WEAPONS = {
     fuseRing: 0.7, fuseFull: 0.55,                          // lodged arrow → burst (s)
     burstRadius: [1.35, 1.8], burstInner: 0.6,              // [ring, full] (m); full damage inside burstInner
     burstDamage: [30, 45], burstEdge: [12, 15],
-    paintTap: 0.649, paintStick: 0.496, burstPaint: [1.416, 1.829], trailEvery: 2.4, trailRadius: 0.378,
+    firePaintDistance: 1.8, firePaintRadius: 0.9,
+    paintTap: 0.649, paintStick: 0.496, burstPaint: [1.416, 1.829], trailEvery: 0.5, trailRadius: 0.378,
     cooldown: 0.22, moveSpeedDrawing: 2.6, moveSpeedFiring: 4.2,
     special: 'strike', specialCost: 190, sub: 'waddle',
   },

@@ -76,6 +76,7 @@ export function looseVolley(a, c) {
   const m = P._muzzle(a, _v.set(0, 0, 0)).clone();
   const dir = P._aimFrom(a, m, _dir);
   P._ballistic(m, dir, a.aimPoint, S.speed, W.straight, W.grav, 0, S.range);
+  paintFireSpot(a, dir);
   // fan axis: on the ground the arrows spread about the vertical (a flat fan); in the air about the aim's horizontal
   // right axis (an upright fan)
   const air = !a.grounded;
@@ -92,6 +93,17 @@ export function looseVolley(a, c) {
   return S;
 }
 
+function paintFireSpot(a, dir) {
+  const flat = _v2.set(dir.x, 0, dir.z);
+  if (flat.lengthSq() < 1e-4) flat.set(Math.sin(a.aimYaw), 0, Math.cos(a.aimYaw));
+  else flat.normalize();
+  _v.copy(a.pos).addScaledVector(flat, W.firePaintDistance);
+  _v.y = a.pos.y + 4;
+  const ground = G.physics.raycast(_v, DOWN, 16, _hit2, true);
+  if (!ground.hit) return;
+  credit(a, G.paint.splat(_v2.copy(ground.point).addScaledVector(ground.normal, 0.08), W.firePaintRadius, a.team, { seed: Math.random() }));
+}
+
 // the three arrows of a volley from m along dir (the fan: about the vertical on the ground, about the aim's right axis
 // in the air). ghost: a remote player's volley (online) — the arrows fly, lodge and burst for the eye only
 function volley(a, S, m, dir, air, ghost = false) {
@@ -103,7 +115,7 @@ function volley(a, S, m, dir, air, ghost = false) {
     const d = _v2.copy(dir); if (i) d.applyAxisAngle(_ax, i * S.fan * DEG);
     p.pos.copy(m); p.prev.copy(m); p.vel.copy(d).multiplyScalar(S.speed); p.dir.copy(d); p.fdir.copy(d);
     Object.assign(p, { owner: a, team: a.team, st: 0, age: 0, dist: 0, t: 0, range: S.range, speed: S.speed, tier: S.tier, dmg: i ? S.side : S.dmg, lodge: S.lodge, fuse: S.fuse,
-      br: S.br, bd: S.bd, be: S.be, bp: S.bp, trail: -1.8, seed: Math.random(), noHit: false, ticks: 0, spawnT: G.time, center: i === 0, ghost });
+      br: S.br, bd: S.bd, be: S.be, bp: S.bp, trail: 0, seed: Math.random(), noHit: false, ticks: 0, spawnT: G.time, center: i === 0, ghost });
     arrows.push(p);
   }
   if (a.isLocal || a._nearCamera?.()) {
@@ -248,14 +260,17 @@ function stepArrow(p, i, dt) {
     }
     return;
   }
-  // trail drips (lodging arrows only: a dotted ink line under the flight)
-  if (p.lodge && !p.noHit) {
-    p.trail += sp * dt;
-    if (p.trail > W.trailEvery) {
-      p.trail = 0;
-      const g = G.physics.raycast(p.pos, DOWN, 4, _hit2, true);
-      if (g.hit) credit(p.owner, G.paint.splat(_v.copy(g.point).addScaledVector(g.normal, 0.1), W.trailRadius * (0.8 + Math.random() * 0.4), p.team, { seed: Math.random() }));
+  // Sample every arrow's swept flight segment at fixed distance intervals, including zero-charge taps.
+  const segmentLength = p.prev.distanceTo(p.pos);
+  if (segmentLength > 1e-5) {
+    let markAt = W.trailEvery - p.trail;
+    while (markAt <= segmentLength) {
+      _v2.copy(p.prev).lerp(p.pos, markAt / segmentLength);
+      const g = G.physics.raycast(_v2, DOWN, 40, _hit2, true);
+      if (g.hit) credit(p.owner, G.paint.splat(_v.copy(g.point).addScaledVector(g.normal, 0.1), W.trailRadius, p.team, { seed: Math.random() }));
+      markAt += W.trailEvery;
     }
+    p.trail = (p.trail + segmentLength) % W.trailEvery;
   }
   if (p.age > LIFE || p.pos.y < PLAYER.waterY - 1.2) {
     if (p.pos.y < PLAYER.waterY - 1.2 && near(p.pos, 30)) G.fx?.waterPlop?.(_v.copy(p.pos).setY(PLAYER.waterY), 0.5);
