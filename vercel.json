@@ -1,0 +1,16 @@
+{
+  "installCommand": "true",
+  "buildCommand": "python3 tools/build-dist.py",
+  "outputDirectory": "dist",
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    }
+  ]
+}
