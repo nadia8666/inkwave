@@ -166,7 +166,7 @@ export class WeaponRunner {
     if (this.underPaintT > 0 || !a.grounded || !a.ground.hit || a.ground.face < 0) return;
     this.underPaintT = 0.2;
     _v.set(a.pos.x, a.ground.y + 0.08, a.pos.z);
-    a.addTurf(G.paint.splat(_v, 0.32, a.team, { seed: Math.random() }));
+    a.addTurf(G.paint.splat(_v, 0.925, a.team, { seed: Math.random() }));
   }
 
   _empty() {
