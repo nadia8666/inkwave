@@ -21,14 +21,14 @@ export const GLOBAL_DAMAGE_SCALE = 0.9;
 
 // ---- Player physics / feel (meters, seconds) ----
 export const PLAYER = {
-  hp: 300, // player damage is insanely buffed here
+  hp: 135, // player damage is insanely buffed here
   specialChargeRate: 0.7,   // special meter points per m² of turf inked (0.8 = charges 20% slower); special ink never charges it
   radius: 0.425,
   height: 1.45,          // kid form standing height (feet -> top of head)
   squidHeight: 0.55,
   runSpeed: 4.0,
   squidDrySpeed: 2,    // squid hopping on unpainted ground
-  swimSpeed: 7.15,       // squid submerged in own ink
+  swimSpeed: 8.15,       // squid submerged in own ink
   enemyInkSpeed: 3,
   climbSpeed: 7.5,
   accelGround: 28.5,
